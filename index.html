@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Markets Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 10% 20%, rgba(59, 130, 246, 0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .topbar {
+            position: relative;
+            z-index: 2;
+            padding: 12px 28px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .topbar-logo {
+            height: 36px;
+            width: auto;
+            display: block;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+
+        .header .badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 50px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #2563eb;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e293b 0%, #2563eb 50%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.15;
+            margin-bottom: 14px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Section titles */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+            margin-top: 52px;
+        }
+
+        .section-title .icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .section-title h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .section-title .count {
+            background: rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.08);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .section-chemicals .icon { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+        .section-mining .icon { background: linear-gradient(135deg, #10b981, #059669); }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        /* Card */
+        .card {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            border-radius: 18px;
+            padding: 28px 30px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06), 0 4px 20px rgba(59, 130, 246, 0.08);
+            background: #ffffff;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:active {
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-content {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-content h3 {
+            font-size: 1.05rem;
+            font-weight: 650;
+            color: #1e293b;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+
+        .card-arrow {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.35s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-arrow svg {
+            width: 16px;
+            height: 16px;
+            color: #64748b;
+            transition: all 0.35s ease;
+        }
+
+        .card:hover .card-arrow {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .card:hover .card-arrow svg {
+            color: #60a5fa;
+            transform: translateX(2px);
+        }
+
+        /* Color themes for cards */
+        .theme-blue .card-icon { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.15)); color: #60a5fa; }
+        .theme-blue::before { background: linear-gradient(135deg, rgba(59,130,246,0.03), transparent); }
+
+        .theme-purple .card-icon { background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(139,92,246,0.15)); color: #a78bfa; }
+        .theme-purple::before { background: linear-gradient(135deg, rgba(168,85,247,0.03), transparent); }
+
+        .theme-cyan .card-icon { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.15)); color: #22d3ee; }
+        .theme-cyan::before { background: linear-gradient(135deg, rgba(6,182,212,0.03), transparent); }
+
+        .theme-rose .card-icon { background: linear-gradient(135deg, rgba(244,63,94,0.15), rgba(251,113,133,0.15)); color: #fb7185; }
+        .theme-rose::before { background: linear-gradient(135deg, rgba(244,63,94,0.03), transparent); }
+
+        .theme-amber .card-icon { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.15)); color: #fbbf24; }
+        .theme-amber::before { background: linear-gradient(135deg, rgba(245,158,11,0.03), transparent); }
+
+        .theme-green .card-icon { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.15)); color: #34d399; }
+        .theme-green::before { background: linear-gradient(135deg, rgba(16,185,129,0.03), transparent); }
+
+        .theme-indigo .card-icon { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(129,140,248,0.15)); color: #818cf8; }
+        .theme-indigo::before { background: linear-gradient(135deg, rgba(99,102,241,0.03), transparent); }
+
+        .theme-teal .card-icon { background: linear-gradient(135deg, rgba(20,184,166,0.15), rgba(45,212,191,0.15)); color: #2dd4bf; }
+        .theme-teal::before { background: linear-gradient(135deg, rgba(20,184,166,0.03), transparent); }
+
+        .theme-orange .card-icon { background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.15)); color: #fb923c; }
+        .theme-orange::before { background: linear-gradient(135deg, rgba(249,115,22,0.03), transparent); }
+
+        .theme-emerald .card-icon { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.15)); color: #10b981; }
+        .theme-emerald::before { background: linear-gradient(135deg, rgba(16,185,129,0.03), transparent); }
+
+        .theme-sky .card-icon { background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(56,189,248,0.15)); color: #38bdf8; }
+        .theme-sky::before { background: linear-gradient(135deg, rgba(14,165,233,0.03), transparent); }
+
+        .theme-pink .card-icon { background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(244,114,182,0.15)); color: #f472b6; }
+        .theme-pink::before { background: linear-gradient(135deg, rgba(236,72,153,0.03), transparent); }
+
+        .theme-lime .card-icon { background: linear-gradient(135deg, rgba(132,204,22,0.15), rgba(163,230,53,0.15)); color: #a3e635; }
+        .theme-lime::before { background: linear-gradient(135deg, rgba(132,204,22,0.03), transparent); }
+
+
+        /* Responsive */
+        @media (max-width: 860px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            .container {
+                padding: 32px 16px 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar with Logo -->
+    <div class="topbar">
+        <img src="logo.png" alt="Logo" class="topbar-logo">
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="badge">Market Intelligence</div>
+            <h1>Chemical Markets Dashboard</h1>
+            <p>Real-time access to commodity chemical and mining reagent market data across global supply chains.</p>
+        </div>
+
+        <!-- Section: Industrial Chemicals -->
+        <div class="section-title section-chemicals">
+            <div class="icon">&#9879;</div>
+            <h2>Industrial Chemicals</h2>
+            <span class="count">7 Markets</span>
+        </div>
+        <div class="grid">
+            <!-- Caustic Soda -->
+            <a href="https://caustic.vercel.app/" target="_blank" class="card theme-blue">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Caustic Soda Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Hydrogen Peroxide -->
+            <a href="https://50-orpin.vercel.app/" target="_blank" class="card theme-cyan">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Hydrogen Peroxide 50% Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Nitric Acid -->
+            <a href="https://nitric-eight.vercel.app/" target="_blank" class="card theme-rose">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Nitric Acid Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Sulphuric Acid -->
+            <a href="https://sulphuric.vercel.app/" target="_blank" class="card theme-amber">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Sulphuric Acid Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Sodium Sulphide -->
+            <a href="https://sodium-neon.vercel.app/" target="_blank" class="card theme-purple">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Sodium Sulphide 60% Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- PAX -->
+            <a href="https://potassium-xi.vercel.app/" target="_blank" class="card theme-indigo">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Potassium Amyl Xanthate (PAX) Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- SIBX -->
+            <a href="https://sibx-topaz.vercel.app/" target="_blank" class="card theme-teal">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Sodium Isobutyl Xanthate (SIBX) Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+        </div>
+
+        <!-- Section: Mining & Metallurgy -->
+        <div class="section-title section-mining">
+            <div class="icon">&#9874;</div>
+            <h2>Mining & Metallurgy Reagents</h2>
+            <span class="count">6 Markets</span>
+        </div>
+        <div class="grid">
+            <!-- Copper Sulphate -->
+            <a href="https://sulphate.vercel.app/" target="_blank" class="card theme-orange">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Copper Sulphate Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Lead Nitrate -->
+            <a href="https://lead-pi-seven.vercel.app/" target="_blank" class="card theme-emerald">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Lead Nitrate Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- MIBC -->
+            <a href="https://micb.vercel.app/" target="_blank" class="card theme-sky">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Methyl Isobutyl Carbinol (MIBC) Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Grinding Media -->
+            <a href="https://grinding-indol.vercel.app/" target="_blank" class="card theme-pink">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Grinding Media Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Ferro Silicon -->
+            <a href="https://ferrero-weld.vercel.app/" target="_blank" class="card theme-lime">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Ferro Silicon Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+
+            <!-- Sodium Meta Bisulphite -->
+            <a href="https://meta-liart-eight.vercel.app/" target="_blank" class="card theme-purple">
+                <div class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/></svg>
+                </div>
+                <div class="card-content">
+                    <h3>Sodium Meta Bisulphite Market</h3>
+                </div>
+                <div class="card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</body>
+</html>
