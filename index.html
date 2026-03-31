@@ -96,6 +96,24 @@
             line-height: 1.6;
         }
 
+        .header .alert-box {
+            margin-top: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 22px;
+            border-radius: 10px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            color: #b45309;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .header .alert-icon {
+            font-size: 1.1rem;
+        }
+
         /* Section titles */
         .section-title {
             display: flex;
@@ -311,6 +329,10 @@
             <div class="badge">Market Intelligence</div>
             <h1>Chemical Markets Dashboard</h1>
             <p>Real-time access to commodity chemical and mining reagent market data across global supply chains.</p>
+            <div class="alert-box">
+                <span class="alert-icon">&#9888;</span>
+                <span>NOTE: The data in all the dashboards is demo data. No real-world data is related to this.</span>
+            </div>
         </div>
 
         <!-- Section: Industrial Chemicals -->
